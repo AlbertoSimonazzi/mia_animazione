@@ -1,5 +1,5 @@
-# Modelli 3D GLB (troppo grandi per GitHub)
-*.glb
+# Modelli 3D GLB
+# Nota: i file GLB sono stati inclusi (39MB totali, sotto il limite GitHub)
 
 # File di sistema
 .DS_Store
