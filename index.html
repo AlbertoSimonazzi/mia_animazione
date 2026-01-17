@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assemblaggio Astucciatrice</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Overlay di caricamento -->
+    <div id="loading-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Caricamento modelli...</p>
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+            <p id="progress-text">0%</p>
+        </div>
+    </div>
+
+    <!-- Container 3D -->
+    <div id="canvas-container"></div>
+
+    <!-- Pannello controlli -->
+    <div id="controls-panel">
+        <h2>Assemblaggio Astucciatrice</h2>
+        <button id="btn-play">&#9654; Play Animazione</button>
+        <button id="btn-reset">&#8634; Reset</button>
+        <button id="btn-explode">&#10038; Vista Esplosa</button>
+        <button id="btn-assembled">&#9632; Vista Assemblata</button>
+        <div class="slider-container">
+            <label>Velocità Animazione</label>
+            <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
+            <span id="speed-value">1x</span>
+        </div>
+        <div id="status-text">Pronto</div>
+        <div id="component-info"></div>
+    </div>
+
+    <!-- Import Map per ES Modules via CDN -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

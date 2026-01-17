@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Caricamento</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+        }
+        .test { margin: 10px 0; padding: 10px; background: #2a2a3e; border-radius: 5px; }
+        .ok { color: #6bcb77; }
+        .error { color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <h1>Test Diagnostico</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        const results = document.getElementById('results');
+
+        function addResult(test, status, message) {
+            const div = document.createElement('div');
+            div.className = 'test ' + (status ? 'ok' : 'error');
+            div.innerHTML = `<strong>${test}:</strong> ${status ? '✓' : '✗'} ${message}`;
+            results.appendChild(div);
+        }
+
+        // Test 1: ES Modules
+        try {
+            addResult('ES Modules', true, 'Supportati');
+        } catch(e) {
+            addResult('ES Modules', false, 'Non supportati');
+        }
+
+        // Test 2: Import Maps
+        try {
+            const hasImportMaps = HTMLScriptElement.supports && HTMLScriptElement.supports('importmap');
+            addResult('Import Maps', hasImportMaps, hasImportMaps ? 'Supportati' : 'NON supportati - aggiorna il browser');
+        } catch(e) {
+            addResult('Import Maps', false, 'NON supportati');
+        }
+
+        // Test 3: Three.js CDN
+        try {
+            const three = await import('https://unpkg.com/three@0.160.0/build/three.module.js');
+            addResult('Three.js CDN', true, `Caricato (versione ${three.REVISION})`);
+        } catch(e) {
+            addResult('Three.js CDN', false, 'Errore: ' + e.message);
+        }
+
+        // Test 4: File GLB
+        try {
+            const response = await fetch('70000001.glb');
+            if (response.ok) {
+                const size = parseInt(response.headers.get('content-length'));
+                addResult('File GLB', true, `70000001.glb trovato (${(size/1024/1024).toFixed(2)} MB)`);
+            } else {
+                addResult('File GLB', false, `Status ${response.status}: file non trovato`);
+            }
+        } catch(e) {
+            addResult('File GLB', false, 'Errore: ' + e.message);
+        }
+
+        // Test 5: File JS
+        try {
+            const response = await fetch('js/main.js');
+            addResult('File JS', response.ok, response.ok ? 'Tutti i file JS accessibili' : 'File JS non trovati');
+        } catch(e) {
+            addResult('File JS', false, 'Errore: ' + e.message);
+        }
+
+        // Test 6: Browser info
+        addResult('Browser', true, navigator.userAgent);
+    </script>
+</body>
+</html>

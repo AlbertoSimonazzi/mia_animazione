@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUTO-ZOOM - Assemblaggio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: monospace; background: #000; color: #0f0; overflow: hidden; }
+        #info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #0f0;
+            padding: 15px;
+            z-index: 999;
+            font-size: 14px;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        .big { color: #ff0; font-size: 16px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div class="big">AUTO-ZOOM ATTIVO</div>
+        <div id="status">Caricamento...</div>
+        <hr style="margin: 10px 0; border-color: #0f0;">
+        <div style="font-size: 11px; color: #888;">
+            CONTROLLI:<br>
+            - Mouse: Ruota vista<br>
+            - Rotella: Zoom<br>
+            - Tasto destro: Pan<br>
+            - Premi 1-9: Zoom diversi
+        </div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const status = document.getElementById('status');
+        function log(msg) {
+            status.innerHTML = msg;
+            console.log(msg);
+        }
+
+        // Setup scena
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+
+        // Camera con FOV più ampio
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000000);
+        camera.position.set(10, 10, 10);
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Luci MOLTO FORTI
+        const ambient = new THREE.AmbientLight(0xffffff, 3);
+        scene.add(ambient);
+
+        const light1 = new THREE.DirectionalLight(0xffffff, 2);
+        light1.position.set(100, 100, 100);
+        scene.add(light1);
+
+        const light2 = new THREE.DirectionalLight(0xffffff, 1);
+        light2.position.set(-100, 50, -100);
+        scene.add(light2);
+
+        log('Caricamento modello...');
+
+        // Carica UN modello di test
+        const loader = new GLTFLoader();
+        const modelsToLoad = [
+            '70000001.glb',
+            '70000002.glb',
+            '70000003.glb'
+        ];
+
+        let loadedCount = 0;
+        const allModels = [];
+
+        modelsToLoad.forEach(filename => {
+            loader.load(
+                filename,
+                (gltf) => {
+                    const model = gltf.scene;
+
+                    // Colora ogni modello diversamente
+                    const colors = [0xff0000, 0x00ff00, 0x0000ff];
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.material = new THREE.MeshStandardMaterial({
+                                color: colors[loadedCount % 3],
+                                metalness: 0.3,
+                                roughness: 0.7
+                            });
+                        }
+                    });
+
+                    scene.add(model);
+                    allModels.push(model);
+                    loadedCount++;
+
+                    log(`Caricati ${loadedCount}/${modelsToLoad.length} modelli`);
+
+                    if (loadedCount === modelsToLoad.length) {
+                        autoZoom();
+                    }
+                },
+                (xhr) => {
+                    const percent = Math.round(xhr.loaded / xhr.total * 100);
+                    log(`${filename}: ${percent}%`);
+                },
+                (error) => {
+                    console.error('Errore:', error);
+                    loadedCount++;
+                    if (loadedCount === modelsToLoad.length) {
+                        autoZoom();
+                    }
+                }
+            );
+        });
+
+        function autoZoom() {
+            // Calcola bounding box di TUTTA la scena
+            const box = new THREE.Box3();
+            scene.traverse((child) => {
+                if (child.isMesh) {
+                    box.expandByObject(child);
+                }
+            });
+
+            if (box.isEmpty()) {
+                log('<span style="color:#f00">ERRORE: Nessun modello caricato!</span>');
+                return;
+            }
+
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+
+            log(`
+                <span class="big">✓ MODELLI CARICATI!</span><br>
+                Centro: (${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)})<br>
+                Dimensione: ${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)}<br>
+                Max: ${maxDim.toFixed(1)} unità
+            `);
+
+            // CALCOLO CAMERA INTELLIGENTE
+            const fov = camera.fov * (Math.PI / 180);
+            const distance = maxDim / (2 * Math.tan(fov / 2)) * 1.5;
+
+            camera.position.set(
+                center.x + distance,
+                center.y + distance * 0.7,
+                center.z + distance
+            );
+            camera.lookAt(center);
+
+            controls.target.copy(center);
+            controls.minDistance = maxDim * 0.05;
+            controls.maxDistance = maxDim * 20;
+
+            camera.near = maxDim * 0.001;
+            camera.far = maxDim * 1000;
+            camera.updateProjectionMatrix();
+
+            controls.update();
+
+            console.log('Camera distance:', distance);
+            console.log('Camera position:', camera.position);
+            console.log('Camera target:', controls.target);
+
+            // Aggiungi assi helper proporzionali
+            const axesHelper = new THREE.AxesHelper(maxDim * 0.5);
+            scene.add(axesHelper);
+
+            // Griglia proporzionale
+            const gridHelper = new THREE.GridHelper(maxDim * 2, 20);
+            gridHelper.position.y = box.min.y;
+            scene.add(gridHelper);
+        }
+
+        // Tasti per zoom manuale
+        window.addEventListener('keydown', (e) => {
+            const zoomLevels = [0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 20];
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= 9) {
+                const factor = zoomLevels[num - 1];
+                const dir = new THREE.Vector3();
+                camera.getWorldDirection(dir);
+                const currentDist = camera.position.distanceTo(controls.target);
+                camera.position.copy(controls.target).addScaledVector(dir.negate(), currentDist * factor);
+                log(`Zoom ${num}: ${factor}x`);
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

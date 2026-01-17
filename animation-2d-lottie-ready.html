@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottie Ready - Export per After Effects</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .component-layer {
+            position: absolute;
+            filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.6));
+        }
+
+        .version-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ffd93d 0%, #cc9900 100%);
+            color: #1a1a2e;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+        }
+
+        .export-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(255, 217, 61, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 400px;
+            z-index: 200;
+        }
+
+        .export-panel h3 {
+            color: #ffd93d;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .export-panel button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffd93d 0%, #cc9900 100%);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-panel button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+        }
+
+        .export-info {
+            font-size: 11px;
+            color: #888;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        #json-output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Badge -->
+    <div class="version-badge">🎬 LOTTIE EXPORT READY</div>
+
+    <!-- Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Pannello controlli -->
+    <div id="controls-panel">
+        <h2>Lottie Export Preview</h2>
+        <button id="btn-play">&#9654; Play Animazione</button>
+        <button id="btn-reset">&#8634; Reset</button>
+        <button id="btn-explode">&#10038; Vista Esplosa</button>
+        <button id="btn-assembled">&#9632; Vista Assemblata</button>
+        <div class="slider-container">
+            <label>Velocità Animazione</label>
+            <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
+            <span id="speed-value">1x</span>
+        </div>
+        <div id="status-text">Pronto</div>
+        <div id="component-info"></div>
+    </div>
+
+    <!-- Pannello Export -->
+    <div class="export-panel">
+        <h3>📤 Export per After Effects</h3>
+        <button id="btn-export-json">💾 Scarica JSON Configurazione</button>
+        <button id="btn-copy-json">📋 Copia JSON negli Appunti</button>
+        <button onclick="window.location.href='LOTTIE-GUIDE.md'">📖 Leggi Guida Lottie</button>
+
+        <div class="export-info">
+            <strong>Come usare:</strong><br>
+            1. Play dell'animazione per testare<br>
+            2. Scarica il JSON con configurazione<br>
+            3. Importa i PNG in After Effects<br>
+            4. Segui la <a href="LOTTIE-GUIDE.md" style="color:#ffd93d">Guida Lottie</a><br>
+            5. Esporta con Bodymovin plugin
+        </div>
+
+        <div id="json-output"></div>
+    </div>
+
+    <script type="module">
+        import { PNGAnimationController } from './js/png-animation.js';
+        import { PNG_ANIMATION_CONFIG } from './js/png-config.js';
+
+        let controller;
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+
+            controller = new PNGAnimationController(PNG_ANIMATION_CONFIG);
+            controller.init(container);
+
+            updateComponentList();
+            setupUI();
+            controller.setExplodedView();
+        }
+
+        function updateComponentList() {
+            const componentInfo = document.getElementById('component-info');
+            let html = '<strong>Componenti:</strong><br>';
+
+            PNG_ANIMATION_CONFIG.components.forEach((comp, index) => {
+                html += `<div class="component-item" id="component-${index}">${index + 1}. ${comp.name}</div>`;
+            });
+
+            componentInfo.innerHTML = html;
+        }
+
+        function setupUI() {
+            const btnPlay = document.getElementById('btn-play');
+            const btnReset = document.getElementById('btn-reset');
+            const btnExplode = document.getElementById('btn-explode');
+            const btnAssembled = document.getElementById('btn-assembled');
+            const speedSlider = document.getElementById('speed-slider');
+            const speedValue = document.getElementById('speed-value');
+            const statusText = document.getElementById('status-text');
+
+            btnPlay.addEventListener('click', () => {
+                statusText.textContent = 'Animazione in corso...';
+
+                PNG_ANIMATION_CONFIG.components.forEach((_, index) => {
+                    const el = document.getElementById(`component-${index}`);
+                    if (el) el.classList.remove('active', 'completed');
+                });
+
+                controller.playAnimation(
+                    () => {
+                        statusText.textContent = 'Assemblaggio completato!';
+                    },
+                    (index, name) => {
+                        statusText.textContent = `Assemblando: ${name}`;
+                        const el = document.getElementById(`component-${index}`);
+                        if (el) {
+                            el.classList.add('active');
+                            el.classList.remove('completed');
+                        }
+                    },
+                    (index) => {
+                        const el = document.getElementById(`component-${index}`);
+                        if (el) {
+                            el.classList.remove('active');
+                            el.classList.add('completed');
+                        }
+                    }
+                );
+            });
+
+            btnReset.addEventListener('click', () => {
+                controller.setExplodedView();
+                statusText.textContent = 'Reset - Vista esplosa';
+
+                PNG_ANIMATION_CONFIG.components.forEach((_, index) => {
+                    const el = document.getElementById(`component-${index}`);
+                    if (el) el.classList.remove('active', 'completed');
+                });
+            });
+
+            btnExplode.addEventListener('click', () => {
+                controller.setExplodedView();
+                statusText.textContent = 'Vista esplosa';
+            });
+
+            btnAssembled.addEventListener('click', () => {
+                controller.setAssembledView();
+                statusText.textContent = 'Vista assemblata';
+
+                PNG_ANIMATION_CONFIG.components.forEach((_, index) => {
+                    const el = document.getElementById(`component-${index}`);
+                    if (el) {
+                        el.classList.remove('active');
+                        el.classList.add('completed');
+                    }
+                });
+            });
+
+            speedSlider.addEventListener('input', (e) => {
+                const speed = parseFloat(e.target.value);
+                speedValue.textContent = `${speed}x`;
+                controller.setSpeed(speed);
+            });
+
+            // Export buttons
+            document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+            document.getElementById('btn-copy-json').addEventListener('click', copyJSON);
+        }
+
+        function generateLottieConfig() {
+            const config = controller.exportConfig();
+
+            // Genera configurazione ottimizzata per Lottie
+            const lottieData = {
+                meta: {
+                    generator: 'VISIOTT PNG Animation Exporter',
+                    version: '1.0',
+                    date: new Date().toISOString()
+                },
+                animation: {
+                    fps: 30,
+                    totalDuration: (config.timing.duration * config.positions.length) +
+                                  (config.timing.delay * (config.positions.length - 1)),
+                    easing: config.timing.easing
+                },
+                components: config.positions.map((pos, index) => ({
+                    name: pos.name,
+                    filename: config.config.components[index].filename,
+                    layer: index + 1,
+                    zIndex: config.config.components[index].zIndex,
+                    keyframes: {
+                        start: {
+                            frame: index * ((config.timing.duration + config.timing.delay) / (1000 / 30)),
+                            position: pos.exploded,
+                            opacity: 0
+                        },
+                        fadeIn: {
+                            frame: index * ((config.timing.duration + config.timing.delay) / (1000 / 30)) + 3,
+                            opacity: 1
+                        },
+                        end: {
+                            frame: (index + 1) * (config.timing.duration / (1000 / 30)) +
+                                   index * (config.timing.delay / (1000 / 30)),
+                            position: pos.final,
+                            opacity: 1
+                        }
+                    }
+                })),
+                afterEffectsGuide: {
+                    composition: {
+                        width: 1920,
+                        height: 1080,
+                        fps: 30,
+                        duration: Math.ceil((config.timing.duration * config.positions.length +
+                                           config.timing.delay * (config.positions.length - 1)) / 1000 * 30)
+                    },
+                    instructions: [
+                        'Importa tutti i PNG in After Effects',
+                        'Crea nuova composizione 1920x1080 @ 30fps',
+                        'Aggiungi i PNG come layers nell\'ordine indicato',
+                        'Usa i keyframes indicati sopra per posizione e opacità',
+                        `Applica easing: ${config.timing.easing}`,
+                        'Esporta con Bodymovin plugin (File > Scripts > Bodymovin)'
+                    ]
+                }
+            };
+
+            return lottieData;
+        }
+
+        function exportJSON() {
+            const data = generateLottieConfig();
+            const json = JSON.stringify(data, null, 2);
+
+            // Download
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lottie-animation-config.json';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            document.getElementById('status-text').textContent = '✓ JSON scaricato!';
+            showJSON(json);
+        }
+
+        function copyJSON() {
+            const data = generateLottieConfig();
+            const json = JSON.stringify(data, null, 2);
+
+            navigator.clipboard.writeText(json).then(() => {
+                document.getElementById('status-text').textContent = '✓ JSON copiato negli appunti!';
+                showJSON(json);
+            });
+        }
+
+        function showJSON(json) {
+            const output = document.getElementById('json-output');
+            output.textContent = json;
+            output.style.display = 'block';
+        }
+
+        init();
+    </script>
+</body>
+</html>

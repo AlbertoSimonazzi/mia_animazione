@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animazione 2D - Assemblaggio Astucciatrice</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Override e aggiunte per animazione 2D */
+        #canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .component-layer {
+            position: absolute;
+            filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.6));
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Badge versione 2D */
+        .version-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #6bcb77 0%, #228b22 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(107, 203, 119, 0.4);
+        }
+
+        /* Messaggio PNG mancanti */
+        .no-png-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 107, 107, 0.95);
+            border: 2px solid #ff6b6b;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            z-index: 999;
+            display: none;
+        }
+
+        .no-png-message h3 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .no-png-message p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .no-png-message button {
+            background: #fff;
+            color: #ff6b6b;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .no-png-message button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Loading overlay per PNG */
+        #png-loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            z-index: 998;
+            text-align: center;
+        }
+
+        .png-loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(74, 158, 255, 0.2);
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Badge versione -->
+    <div class="version-badge">✨ Versione 2D PNG</div>
+
+    <!-- Loading PNG -->
+    <div id="png-loading">
+        <div class="png-loader"></div>
+        <p style="color: #4a9eff;">Caricamento immagini PNG...</p>
+        <p id="png-progress" style="color: #888; font-size: 12px;">0/7</p>
+    </div>
+
+    <!-- Messaggio PNG mancanti -->
+    <div class="no-png-message" id="no-png-message">
+        <h3>⚠️ PNG Non Trovati</h3>
+        <p>Non ho trovato le immagini PNG nella cartella <code>images/components/</code>.</p>
+        <p><strong>Prima devi esportare i PNG dai modelli GLB!</strong></p>
+        <button onclick="window.location.href='png-exporter.html'">
+            🖼️ Vai al PNG Exporter
+        </button>
+    </div>
+
+    <!-- Container 2D -->
+    <div id="canvas-container"></div>
+
+    <!-- Pannello controlli (stesso del 3D) -->
+    <div id="controls-panel">
+        <h2>Animazione 2D Assemblaggio</h2>
+        <button id="btn-play">&#9654; Play Animazione</button>
+        <button id="btn-reset">&#8634; Reset</button>
+        <button id="btn-explode">&#10038; Vista Esplosa</button>
+        <button id="btn-assembled">&#9632; Vista Assemblata</button>
+        <div class="slider-container">
+            <label>Velocità Animazione</label>
+            <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
+            <span id="speed-value">1x</span>
+        </div>
+        <div class="slider-container">
+            <label>Easing</label>
+            <select id="easing-selector">
+                <option value="linear">Linear</option>
+                <option value="easeInOutQuad">Ease In-Out Quad</option>
+                <option value="easeInOutCubic" selected>Ease In-Out Cubic</option>
+                <option value="easeOutElastic">Elastic</option>
+                <option value="easeOutBack">Back</option>
+            </select>
+        </div>
+        <div id="status-text">Pronto</div>
+        <div id="component-info"></div>
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <small style="color: #666; font-size: 10px;">
+                🎨 Animazione 2D ottimizzata<br>
+                📦 Peso ridotto, performance migliorate
+            </small>
+        </div>
+    </div>
+
+    <script type="module">
+        import { PNGAnimationController } from './js/png-animation.js';
+        import { PNG_ANIMATION_CONFIG } from './js/png-config.js';
+
+        let controller;
+        let loadedImages = 0;
+        const totalImages = PNG_ANIMATION_CONFIG.components.length;
+
+        // Inizializzazione
+        async function init() {
+            const container = document.getElementById('canvas-container');
+
+            // Crea controller
+            controller = new PNGAnimationController(PNG_ANIMATION_CONFIG);
+            controller.init(container);
+
+            // Monitora caricamento immagini
+            let errorCount = 0;
+            const checkInterval = setInterval(() => {
+                const state = controller.getState();
+                loadedImages = state.loadedComponents;
+
+                document.getElementById('png-progress').textContent = `${loadedImages}/${totalImages}`;
+
+                if (loadedImages === totalImages) {
+                    clearInterval(checkInterval);
+                    onAllImagesLoaded();
+                } else if (loadedImages === 0 && errorCount > 20) {
+                    // Dopo 2 secondi nessuna immagine → mostra errore
+                    clearInterval(checkInterval);
+                    showNoPNGMessage();
+                }
+                errorCount++;
+            }, 100);
+
+            // Aggiorna lista componenti
+            updateComponentList();
+
+            // Setup UI
+            setupUI();
+        }
+
+        function onAllImagesLoaded() {
+            document.getElementById('png-loading').style.display = 'none';
+            controller.setExplodedView();
+            document.getElementById('status-text').textContent = 'Pronto - Tutte le immagini caricate';
+        }
+
+        function showNoPNGMessage() {
+            document.getElementById('png-loading').style.display = 'none';
+            document.getElementById('no-png-message').style.display = 'block';
+        }
+
+        function updateComponentList() {
+            const componentInfo = document.getElementById('component-info');
+            let html = '<strong>Componenti:</strong><br>';
+
+            PNG_ANIMATION_CONFIG.components.forEach((comp, index) => {
+                html += `<div class="component-item" id="component-${index}">${index + 1}. ${comp.name}</div>`;
+            });
+
+            componentInfo.innerHTML = html;
+        }
+
+        function setupUI() {
+            const btnPlay = document.getElementById('btn-play');
+            const btnReset = document.getElementById('btn-reset');
+            const btnExplode = document.getElementById('btn-explode');
+            const btnAssembled = document.getElementById('btn-assembled');
+            const speedSlider = document.getElementById('speed-slider');
+            const speedValue = document.getElementById('speed-value');
+            const easingSelector = document.getElementById('easing-selector');
+            const statusText = document.getElementById('status-text');
+
+            btnPlay.addEventListener('click', () => {
+                statusText.textContent = 'Animazione in corso...';
+
+                // Reset stile componenti
+                PNG_ANIMATION_CONFIG.components.forEach((_, index) => {
+                    const el = document.getElementById(`component-${index}`);
+                    if (el) el.classList.remove('active', 'completed');
+                });
+
+                controller.playAnimation(
+                    () => {
+                        statusText.textContent = 'Assemblaggio completato!';
+                    },
+                    (index, name) => {
+                        statusText.textContent = `Assemblando: ${name}`;
+                        const el = document.getElementById(`component-${index}`);
+                        if (el) {
+                            el.classList.add('active');
+                            el.classList.remove('completed');
+                        }
+                    },
+                    (index) => {
+                        const el = document.getElementById(`component-${index}`);
+                        if (el) {
+                            el.classList.remove('active');
+                            el.classList.add('completed');
+                        }
+                    }
+                );
+            });
+
+            btnReset.addEventListener('click', () => {
+                controller.setExplodedView();
+                statusText.textContent = 'Reset - Vista esplosa';
+
+                PNG_ANIMATION_CONFIG.components.forEach((_, index) => {
+                    const el = document.getElementById(`component-${index}`);
+                    if (el) el.classList.remove('active', 'completed');
+                });
+            });
+
+            btnExplode.addEventListener('click', () => {
+                controller.setExplodedView();
+                statusText.textContent = 'Vista esplosa';
+            });
+
+            btnAssembled.addEventListener('click', () => {
+                controller.setAssembledView();
+                statusText.textContent = 'Vista assemblata';
+
+                PNG_ANIMATION_CONFIG.components.forEach((_, index) => {
+                    const el = document.getElementById(`component-${index}`);
+                    if (el) {
+                        el.classList.remove('active');
+                        el.classList.add('completed');
+                    }
+                });
+            });
+
+            speedSlider.addEventListener('input', (e) => {
+                const speed = parseFloat(e.target.value);
+                speedValue.textContent = `${speed}x`;
+                controller.setSpeed(speed);
+            });
+
+            easingSelector.addEventListener('change', (e) => {
+                controller.setEasing(e.target.value);
+                statusText.textContent = `Easing cambiato: ${e.target.value}`;
+            });
+        }
+
+        // Avvia
+        init();
+    </script>
+</body>
+</html>

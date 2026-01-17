@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG COMPLETO - Assemblaggio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+        }
+        #debug-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #0f0;
+            padding: 15px;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 9999;
+            font-size: 12px;
+        }
+        .debug-error { color: #f00; font-weight: bold; }
+        .debug-warn { color: #ff0; }
+        .debug-ok { color: #0f0; }
+        .debug-info { color: #0ff; }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 60vw;
+            height: 100vh;
+            background: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug-panel">
+        <h3 style="color: #fff; border-bottom: 1px solid #0f0; margin-bottom: 10px;">DEBUG CONSOLE</h3>
+        <div id="log"></div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const log = document.getElementById('log');
+
+        function debugLog(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = `debug-${type}`;
+            div.textContent = `[${time}] ${msg}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, msg);
+        }
+
+        window.addEventListener('error', (e) => {
+            debugLog(`ERROR: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+
+        debugLog('Inizializzazione...', 'ok');
+
+        // Setup scena
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        debugLog('✓ Scena creata', 'ok');
+
+        // Setup camera
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100000);
+        camera.position.set(500, 500, 500);
+        debugLog(`✓ Camera creata at (${camera.position.x}, ${camera.position.y}, ${camera.position.z})`, 'ok');
+
+        // Setup renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth * 0.6, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        debugLog('✓ Renderer creato', 'ok');
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        debugLog('✓ OrbitControls creati', 'ok');
+
+        // Luci FORTI
+        const ambient = new THREE.AmbientLight(0xffffff, 2);
+        scene.add(ambient);
+        const directional = new THREE.DirectionalLight(0xffffff, 2);
+        directional.position.set(1000, 1000, 1000);
+        scene.add(directional);
+        debugLog('✓ Luci aggiunte (molto luminose)', 'ok');
+
+        // Aggiungi CUBO DI TEST per vedere se il rendering funziona
+        const testCube = new THREE.Mesh(
+            new THREE.BoxGeometry(50, 50, 50),
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        testCube.position.set(0, 0, 0);
+        scene.add(testCube);
+        debugLog('✓ CUBO ROSSO DI TEST aggiunto a (0,0,0) - DOVRESTI VEDERLO!', 'warn');
+
+        // Aggiungi assi helper
+        const axesHelper = new THREE.AxesHelper(200);
+        scene.add(axesHelper);
+        debugLog('✓ Assi XYZ aggiunti (X=rosso, Y=verde, Z=blu)', 'info');
+
+        // Griglia
+        const gridHelper = new THREE.GridHelper(1000, 50);
+        scene.add(gridHelper);
+        debugLog('✓ Griglia aggiunta', 'info');
+
+        // Carica UN SOLO modello per test
+        debugLog('Inizio caricamento 70000001.glb...', 'info');
+        const loader = new GLTFLoader();
+
+        loader.load(
+            '70000001.glb',
+            (gltf) => {
+                debugLog('✓ GLB CARICATO!', 'ok');
+                const model = gltf.scene;
+
+                // Calcola dimensioni
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+
+                debugLog(`Modello center: (${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)})`, 'info');
+                debugLog(`Modello size: (${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})`, 'info');
+                debugLog(`Max dimension: ${Math.max(size.x, size.y, size.z).toFixed(1)}`, 'info');
+
+                // Conta mesh
+                let meshCount = 0;
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        meshCount++;
+                        // FORZA materiale visibile
+                        child.material = new THREE.MeshStandardMaterial({
+                            color: 0x00ff00,
+                            metalness: 0.3,
+                            roughness: 0.7
+                        });
+                    }
+                });
+                debugLog(`Trovate ${meshCount} mesh nel modello`, 'info');
+
+                // Centra il modello
+                model.position.set(-center.x, -center.y, -center.z);
+                scene.add(model);
+                debugLog('✓ Modello aggiunto alla scena e CENTRATO in (0,0,0)', 'ok');
+
+                // Posiziona camera
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const distance = maxDim * 2;
+                camera.position.set(distance, distance * 0.7, distance);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
+                controls.update();
+
+                debugLog(`Camera riposizionata a distanza ${distance.toFixed(1)}`, 'ok');
+                debugLog('✓✓✓ DOVRESTI VEDERE IL MODELLO VERDE ✓✓✓', 'warn');
+            },
+            (xhr) => {
+                const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+                debugLog(`Caricamento... ${percent}%`, 'info');
+            },
+            (error) => {
+                debugLog(`ERRORE CARICAMENTO: ${error}`, 'error');
+            }
+        );
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        debugLog('✓ Animation loop avviato', 'ok');
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth * 0.6 / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth * 0.6, window.innerHeight);
+        });
+
+        debugLog('===================', 'ok');
+        debugLog('SE NON VEDI NULLA:', 'warn');
+        debugLog('1. Dovresti vedere un CUBO ROSSO al centro', 'warn');
+        debugLog('2. Dovresti vedere il modello VERDE', 'warn');
+        debugLog('3. Prova a zoomare con la rotella del mouse', 'warn');
+        debugLog('4. Copia TUTTI questi messaggi e inviali', 'warn');
+        debugLog('===================', 'ok');
+    </script>
+</body>
+</html>

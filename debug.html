@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Assemblaggio Astucciatrice</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #debug-console {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 400px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.95);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px;
+            overflow-y: auto;
+            border: 2px solid #0f0;
+            z-index: 9999;
+        }
+        .debug-error { color: #f00; }
+        .debug-warn { color: #ff0; }
+        .debug-info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <!-- Overlay di caricamento -->
+    <div id="loading-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Caricamento modelli...</p>
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+            <p id="progress-text">0%</p>
+        </div>
+    </div>
+
+    <!-- Container 3D -->
+    <div id="canvas-container"></div>
+
+    <!-- Pannello controlli -->
+    <div id="controls-panel">
+        <h2>Assemblaggio Astucciatrice</h2>
+        <button id="btn-play">&#9654; Play Animazione</button>
+        <button id="btn-reset">&#8634; Reset</button>
+        <button id="btn-explode">&#10038; Vista Esplosa</button>
+        <button id="btn-assembled">&#9632; Vista Assemblata</button>
+        <div class="slider-container">
+            <label>Velocità Animazione</label>
+            <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
+            <span id="speed-value">1x</span>
+        </div>
+        <div id="status-text">Pronto</div>
+        <div id="component-info"></div>
+    </div>
+
+    <!-- Console di debug -->
+    <div id="debug-console">
+        <div style="color: #fff; border-bottom: 1px solid #0f0; margin-bottom: 5px;">DEBUG CONSOLE</div>
+    </div>
+
+    <!-- Cattura errori -->
+    <script>
+        const debugConsole = document.getElementById('debug-console');
+
+        function debugLog(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'debug-' + type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugConsole.appendChild(div);
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+            console.log(message);
+        }
+
+        // Cattura errori globali
+        window.addEventListener('error', (e) => {
+            debugLog(`ERROR: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            debugLog(`PROMISE REJECTED: ${e.reason}`, 'error');
+        });
+
+        debugLog('Debug console attiva', 'info');
+    </script>
+
+    <!-- Import Map per ES Modules via CDN -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        debugLog('Inizio caricamento moduli...', 'info');
+
+        try {
+            // Importa con debug
+            debugLog('Importazione THREE...', 'info');
+            const THREE = await import('three');
+            debugLog(`THREE caricato (rev ${THREE.REVISION})`, 'info');
+
+            debugLog('Importazione OrbitControls...', 'info');
+            const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+            debugLog('OrbitControls caricato', 'info');
+
+            debugLog('Importazione config.js...', 'info');
+            const config = await import('./js/config.js');
+            debugLog('Config caricato', 'info');
+
+            debugLog('Importazione loader.js...', 'info');
+            const loader = await import('./js/loader.js');
+            debugLog('Loader caricato', 'info');
+
+            debugLog('Importazione animation.js...', 'info');
+            const animation = await import('./js/animation.js');
+            debugLog('Animation caricato', 'info');
+
+            debugLog('Importazione main.js...', 'info');
+            const main = await import('./js/main.js');
+            debugLog('Main.js caricato - inizializzazione in corso...', 'info');
+
+        } catch(error) {
+            debugLog(`ERRORE FATALE: ${error.message}`, 'error');
+            debugLog(`Stack: ${error.stack}`, 'error');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Modelli 3D GLB (troppo grandi per GitHub)
+*.glb
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Claude
+.claude/
+
+# Blender
+*.blend1
+*.blend2
+__pycache__/
+
+# Output video (troppo grande per git)
+*.mp4
+*.avi
+*.mov
+
+# Node (se usi npm)
+node_modules/
