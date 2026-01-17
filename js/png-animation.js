@@ -153,16 +153,33 @@ export class PNGAnimationController {
      * Play animazione assemblaggio sequenziale
      */
     async playAnimation(onComplete, onComponentStart, onComponentComplete) {
-        if (this.isPlaying) return;
+        if (this.isPlaying) {
+            console.log('⚠ Animazione già in corso, ignoro');
+            return;
+        }
 
+        console.log('🎬 Inizio playAnimation, componenti:', this.components.length);
         this.isPlaying = true;
-        this.setExplodedView();
+
+        // Imposta vista esplosa SENZA fermare l'animazione
+        this.components.forEach(comp => {
+            const dir = comp.config.explodeDirection;
+            this.setPosition(comp, dir.x, dir.y);
+            comp.element.style.opacity = comp.config.opacity || 1;
+        });
 
         for (let i = 0; i < this.components.length; i++) {
-            if (!this.isPlaying) break;
+            if (!this.isPlaying) {
+                console.log('⏹ Animazione fermata a componente', i);
+                break;
+            }
 
             const comp = this.components[i];
             this.currentIndex = i;
+
+            console.log(`🔧 Componente ${i}: ${comp.config.name}`);
+            console.log(`   Start: (${comp.currentPosition.x}, ${comp.currentPosition.y})`);
+            console.log(`   End: (${comp.finalPosition.x}, ${comp.finalPosition.y})`);
 
             if (onComponentStart) {
                 onComponentStart(i, comp.config.name);
@@ -181,6 +198,7 @@ export class PNGAnimationController {
         this.isPlaying = false;
         this.currentIndex = -1;
 
+        console.log('✅ Animazione completata');
         if (onComplete) {
             onComplete();
         }

@@ -215,7 +215,9 @@
             let html = '<strong>Componenti:</strong><br>';
 
             PNG_ANIMATION_CONFIG.components.forEach((comp, index) => {
-                html += `<div class="component-item" id="component-${index}">${index + 1}. ${comp.name}</div>`;
+                // Estrai solo il numero dal filename (rimuovi .png)
+                const numero = comp.filename.replace('.png', '');
+                html += `<div class="component-item" id="component-${index}">${index + 1}. ${numero}</div>`;
             });
 
             componentInfo.innerHTML = html;
@@ -245,7 +247,8 @@
                         statusText.textContent = 'Assemblaggio completato!';
                     },
                     (index, name) => {
-                        statusText.textContent = `Assemblando: ${name}`;
+                        const filename = PNG_ANIMATION_CONFIG.components[index].filename;
+                        statusText.textContent = `Assemblando: ${filename} (${index})`;
                         const el = document.getElementById(`component-${index}`);
                         if (el) {
                             el.classList.add('active');

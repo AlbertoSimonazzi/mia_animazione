@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PNG Animation</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .component {
+            position: absolute;
+            max-width: 80vw;
+            max-height: 80vh;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 100;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #4a9eff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #3a8eef;
+        }
+
+        #info {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3 style="margin: 0 0 15px 0;">Test Animazione PNG</h3>
+        <button onclick="testExploded()">Vista Esplosa</button>
+        <button onclick="testAssembled()">Vista Assemblata</button>
+        <button onclick="playAnim()">Play Animazione</button>
+        <div id="info">
+            <div id="status">Inizializzazione...</div>
+            <div id="loaded">PNG caricati: 0/7</div>
+        </div>
+    </div>
+
+    <div id="container"></div>
+
+    <script type="module">
+        import { PNGAnimationController } from './js/png-animation.js';
+        import { PNG_ANIMATION_CONFIG } from './js/png-config.js';
+
+        let controller;
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        function updateLoaded() {
+            const state = controller.getState();
+            document.getElementById('loaded').textContent =
+                `PNG caricati: ${state.loadedComponents}/${state.totalComponents}`;
+        }
+
+        // Inizializzazione
+        const container = document.getElementById('container');
+        controller = new PNGAnimationController(PNG_ANIMATION_CONFIG);
+        controller.init(container);
+
+        // Esponi funzioni globalmente per i button onclick
+        window.testExploded = function() {
+            updateStatus('Vista Esplosa');
+            controller.setExplodedView();
+        };
+
+        window.testAssembled = function() {
+            updateStatus('Vista Assemblata');
+            controller.setAssembledView();
+        };
+
+        window.playAnim = function() {
+            updateStatus('Animazione in corso...');
+            controller.playAnimation(
+                () => updateStatus('✓ Completato!'),
+                (idx, name) => updateStatus(`Assemblando: ${name}`),
+                null
+            );
+        };
+
+        // Check caricamento immagini
+        setInterval(updateLoaded, 200);
+
+        // Avvia con vista esplosa dopo 1 secondo
+        setTimeout(() => {
+            controller.setExplodedView();
+            updateStatus('✓ Pronto - Vista Esplosa');
+        }, 1000);
+
+        updateStatus('Caricamento PNG...');
+    </script>
+</body>
+</html>

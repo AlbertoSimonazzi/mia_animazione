@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animazione 2D - FUNZIONANTE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .component {
+            position: absolute;
+            max-width: 400px;
+            max-height: 400px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.6));
+            will-change: transform;
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 250px;
+            z-index: 100;
+        }
+
+        #controls h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #4a9eff;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background: linear-gradient(135deg, #4a9eff 0%, #3080df 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.4);
+        }
+
+        #status {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            color: #888;
+        }
+
+        #components-list {
+            margin-top: 10px;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .comp-item {
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .comp-item.active {
+            background: rgba(255, 217, 61, 0.2);
+            color: #ffd93d;
+        }
+
+        .comp-item.completed {
+            background: rgba(107, 203, 119, 0.2);
+            color: #6bcb77;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <div id="controls">
+        <h2>Animazione 2D</h2>
+        <button id="btn-play">▶ Play Animazione</button>
+        <button id="btn-explode">◆ Vista Esplosa</button>
+        <button id="btn-assembled">■ Vista Assemblata</button>
+        <div id="status">Inizializzazione...</div>
+        <div id="components-list"></div>
+    </div>
+
+    <script>
+        // Configurazione
+        const CONFIG = {
+            imagePath: 'images/components/',
+            duration: 1000,
+            delay: 200,
+            components: [
+                { file: '70000010.png', name: 'Comp 7', explode: { x: 0, y: -500 }, z: 1 },
+                { file: '70000008.png', name: 'Comp 6', explode: { x: 400, y: -300 }, z: 2 },
+                { file: '70000006.png', name: 'Comp 5', explode: { x: -400, y: -300 }, z: 3 },
+                { file: '70000004.png', name: 'Comp 4', explode: { x: 500, y: 0 }, z: 4 },
+                { file: '70000003.png', name: 'Comp 3', explode: { x: 0, y: 400 }, z: 5 },
+                { file: '70000002.png', name: 'Comp 2', explode: { x: -500, y: 0 }, z: 6 },
+                { file: '70000001.png', name: 'Comp 1', explode: { x: 0, y: -400 }, z: 7 }
+            ]
+        };
+
+        // Elementi DOM
+        const container = document.getElementById('container');
+        const status = document.getElementById('status');
+        const compList = document.getElementById('components-list');
+
+        // Stato
+        let components = [];
+        let isPlaying = false;
+
+        // Inizializzazione
+        function init() {
+            CONFIG.components.forEach((cfg, i) => {
+                // Crea immagine
+                const img = document.createElement('img');
+                img.className = 'component';
+                img.src = CONFIG.imagePath + cfg.file;
+                img.style.zIndex = cfg.z;
+                container.appendChild(img);
+
+                // Crea item lista
+                const item = document.createElement('div');
+                item.className = 'comp-item';
+                item.id = `comp-${i}`;
+                item.textContent = `${i + 1}. ${cfg.name}`;
+                compList.appendChild(item);
+
+                // Salva riferimento
+                components.push({
+                    img,
+                    item,
+                    config: cfg,
+                    currentX: 0,
+                    currentY: 0
+                });
+
+                img.onload = () => {
+                    if (components.filter(c => c.img.complete).length === components.length) {
+                        status.textContent = '✓ Pronto';
+                        setExploded();
+                    }
+                };
+            });
+        }
+
+        // Imposta posizione
+        function setPosition(comp, x, y) {
+            comp.currentX = x;
+            comp.currentY = y;
+            comp.img.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        }
+
+        // Vista esplosa
+        function setExploded() {
+            components.forEach(comp => {
+                setPosition(comp, comp.config.explode.x, comp.config.explode.y);
+                comp.item.className = 'comp-item';
+            });
+        }
+
+        // Vista assemblata
+        function setAssembled() {
+            components.forEach(comp => {
+                setPosition(comp, 0, 0);
+                comp.item.className = 'comp-item completed';
+            });
+        }
+
+        // Anima un componente
+        function animateComponent(comp) {
+            return new Promise(resolve => {
+                const startX = comp.currentX;
+                const startY = comp.currentY;
+                const endX = 0;
+                const endY = 0;
+                const startTime = performance.now();
+
+                function animate(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / CONFIG.duration, 1);
+
+                    // Easing cubic
+                    const eased = progress < 0.5
+                        ? 4 * progress * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                    const x = startX + (endX - startX) * eased;
+                    const y = startY + (endY - startY) * eased;
+
+                    setPosition(comp, x, y);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        setPosition(comp, endX, endY);
+                        resolve();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            });
+        }
+
+        // Play animazione
+        async function play() {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            setExploded();
+            status.textContent = 'Animazione in corso...';
+
+            for (let i = 0; i < components.length; i++) {
+                const comp = components[i];
+
+                comp.item.className = 'comp-item active';
+                status.textContent = `Assemblando: ${comp.config.name}`;
+
+                await animateComponent(comp);
+
+                comp.item.className = 'comp-item completed';
+
+                // Pausa tra componenti
+                await new Promise(resolve => setTimeout(resolve, CONFIG.delay));
+            }
+
+            status.textContent = '✓ Assemblaggio completato!';
+            isPlaying = false;
+        }
+
+        // Event listeners
+        document.getElementById('btn-play').addEventListener('click', play);
+        document.getElementById('btn-explode').addEventListener('click', () => {
+            setExploded();
+            status.textContent = 'Vista esplosa';
+        });
+        document.getElementById('btn-assembled').addEventListener('click', () => {
+            setAssembled();
+            status.textContent = 'Vista assemblata';
+        });
+
+        // Avvia
+        init();
+    </script>
+</body>
+</html>

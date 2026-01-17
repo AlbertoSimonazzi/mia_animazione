@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Animazione</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1a1a2e;
+            color: white;
+            font-family: monospace;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .component {
+            position: absolute;
+            max-width: 300px;
+            max-height: 300px;
+            border: 2px solid red;
+        }
+
+        #debug {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 400px;
+            font-size: 11px;
+            z-index: 100;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3a8eef;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug">
+        <h3 style="margin: 0 0 10px 0;">DEBUG</h3>
+        <button onclick="testSetup()">1. Test Setup</button>
+        <button onclick="testExploded()">2. Vista Esplosa</button>
+        <button onclick="testPlay()">3. Play</button>
+        <div id="log" style="margin-top: 10px; color: #0f0;"></div>
+    </div>
+
+    <div id="container"></div>
+
+    <script type="module">
+        import { PNGAnimationController } from './js/png-animation.js';
+        import { PNG_ANIMATION_CONFIG } from './js/png-config.js';
+
+        let controller;
+        const log = document.getElementById('log');
+
+        function addLog(text) {
+            log.innerHTML += text + '<br>';
+            console.log(text);
+        }
+
+        // Inizializzazione
+        const container = document.getElementById('container');
+        controller = new PNGAnimationController(PNG_ANIMATION_CONFIG);
+        controller.init(container);
+
+        window.testSetup = function() {
+            log.innerHTML = '';
+            addLog('=== TEST SETUP ===');
+            addLog('Config components: ' + PNG_ANIMATION_CONFIG.components.length);
+            addLog('Controller components: ' + controller.components.length);
+
+            controller.components.forEach((comp, i) => {
+                addLog(`Component ${i}: ${comp.config.name}`);
+                addLog(`  Explode: x=${comp.config.explodeDirection.x}, y=${comp.config.explodeDirection.y}`);
+                addLog(`  Current: x=${comp.currentPosition.x}, y=${comp.currentPosition.y}`);
+                addLog(`  Final: x=${comp.finalPosition.x}, y=${comp.finalPosition.y}`);
+                addLog(`  zIndex: ${comp.config.zIndex}`);
+            });
+        };
+
+        window.testExploded = function() {
+            log.innerHTML = '';
+            addLog('=== CHIAMATA setExplodedView() ===');
+            controller.setExplodedView();
+
+            setTimeout(() => {
+                controller.components.forEach((comp, i) => {
+                    const style = window.getComputedStyle(comp.element);
+                    const transform = style.transform;
+                    addLog(`Component ${i} transform: ${transform}`);
+                    addLog(`  Current pos: x=${comp.currentPosition.x}, y=${comp.currentPosition.y}`);
+                });
+            }, 100);
+        };
+
+        window.testPlay = function() {
+            log.innerHTML = '';
+            addLog('=== CHIAMATA playAnimation() ===');
+
+            controller.playAnimation(
+                () => addLog('✓ Animazione completata'),
+                (idx, name) => addLog(`→ Assemblando: ${name} (${idx})`),
+                (idx) => addLog(`✓ Completato componente ${idx}`)
+            );
+        };
+
+        // Auto-test iniziale
+        setTimeout(() => {
+            addLog('Inizializzazione completata');
+            addLog('Premi i bottoni per testare');
+        }, 500);
+    </script>
+</body>
+</html>
