@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animazione 2D - Assemblaggio Astucciatrice</title>
+    <title>Mia Animazione Finale - Assemblaggio 2D</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* Override e aggiunte per animazione 2D */
@@ -99,33 +99,95 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
+
+        /* Pannello controlli più compatto */
+        #controls-panel {
+            padding: 10px;
+            min-width: 200px;
+            max-width: 220px;
+            font-size: 11px;
+        }
+
+        #controls-panel h2 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+        }
+
+        #controls-panel button {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            font-size: 11px;
+        }
+
+        .slider-container {
+            margin: 8px 0;
+            padding: 6px 0;
+        }
+
+        .slider-container label {
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        #speed-value {
+            font-size: 10px;
+        }
+
+        #status-text {
+            font-size: 10px;
+            margin-top: 6px;
+            padding: 5px;
+        }
+
+        #component-info {
+            font-size: 9px;
+            margin-top: 6px;
+            max-height: 100px;
+        }
+
+        .slider-container select {
+            font-size: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(74, 158, 255, 0.5);
+            border-radius: 6px;
+            width: 100%;
+            min-height: 32px;
+            cursor: pointer;
+        }
+
+        .slider-container select option {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 8px;
+        }
     </style>
 </head>
 <body>
     <!-- Badge versione -->
-    <div class="version-badge">✨ Versione 2D PNG</div>
+    <div class="version-badge">Mia Animazione Finale</div>
 
     <!-- Loading PNG -->
     <div id="png-loading">
         <div class="png-loader"></div>
         <p style="color: #4a9eff;">Caricamento immagini PNG...</p>
-        <p id="png-progress" style="color: #888; font-size: 12px;">0/7</p>
+        <p id="png-progress" style="color: #888; font-size: 12px;">0/8</p>
     </div>
 
     <!-- Messaggio PNG mancanti -->
     <div class="no-png-message" id="no-png-message">
-        <h3>⚠️ PNG Non Trovati</h3>
-        <p>Non ho trovato le immagini PNG nella cartella <code>images/components/</code>.</p>
-        <p><strong>Prima devi esportare i PNG dai modelli GLB!</strong></p>
-        <button onclick="window.location.href='png-exporter.html'">
-            🖼️ Vai al PNG Exporter
-        </button>
+        <h3>PNG Non Trovati</h3>
+        <p>Non ho trovato le immagini PNG nella cartella <code>images/</code>.</p>
+        <p><strong>Verifica che tutte le 8 immagini siano presenti!</strong></p>
+        <button onclick="location.reload()">Ricarica Pagina</button>
     </div>
 
     <!-- Container 2D -->
     <div id="canvas-container"></div>
 
-    <!-- Pannello controlli (stesso del 3D) -->
+    <!-- Pannello controlli -->
     <div id="controls-panel">
         <h2>Animazione 2D Assemblaggio</h2>
         <button id="btn-play">&#9654; Play Animazione</button>
@@ -133,7 +195,7 @@
         <button id="btn-explode">&#10038; Vista Esplosa</button>
         <button id="btn-assembled">&#9632; Vista Assemblata</button>
         <div class="slider-container">
-            <label>Velocità Animazione</label>
+            <label>Velocita Animazione</label>
             <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
             <span id="speed-value">1x</span>
         </div>
@@ -151,8 +213,8 @@
         <div id="component-info"></div>
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
             <small style="color: #666; font-size: 10px;">
-                🎨 Animazione 2D ottimizzata<br>
-                📦 Peso ridotto, performance migliorate
+                Animazione 2D ottimizzata<br>
+                8 componenti in sequenza
             </small>
         </div>
     </div>
@@ -248,7 +310,7 @@
                     },
                     (index, name) => {
                         const filename = PNG_ANIMATION_CONFIG.components[index].filename;
-                        statusText.textContent = `Assemblando: ${filename} (${index})`;
+                        statusText.textContent = `Assemblando: ${filename}`;
                         const el = document.getElementById(`component-${index}`);
                         if (el) {
                             el.classList.add('active');
