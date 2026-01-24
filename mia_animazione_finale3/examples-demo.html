@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Esempi Animazioni PNG - Mia Animazione</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 40px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1em;
+        }
+
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .section-description {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+            padding-left: 20px;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .example-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .example-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .example-title {
+            font-size: 1.3em;
+            color: #667eea;
+        }
+
+        .example-badge {
+            padding: 5px 12px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #a0aeff;
+        }
+
+        .example-badge.future {
+            background: rgba(234, 102, 102, 0.2);
+            color: #ffb3b3;
+        }
+
+        .example-description {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .viewer-container {
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #a0aeff;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .status-indicator {
+            text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+        }
+
+        .status-indicator.playing {
+            background: rgba(102, 234, 128, 0.2);
+            color: #66ea80;
+        }
+
+        .future-note {
+            background: rgba(234, 102, 102, 0.1);
+            border-left: 4px solid #ea6666;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            color: #ffb3b3;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+        }
+
+        /* Component layer styles */
+        .component-layer {
+            position: absolute;
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: contain;
+        }
+
+        @media (max-width: 768px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎬 Demo Esempi Animazioni PNG</h1>
+        <p>Esplora tutti i tipi di animazione disponibili per l'assemblaggio 2D</p>
+    </div>
+
+    <!-- SEZIONE 1: MOVIMENTI BASE -->
+    <div class="section">
+        <h2 class="section-title">📍 Movimenti Base</h2>
+        <p class="section-description">
+            Animazioni semplici con movimento da direzioni diverse. Il componente parte da una posizione esplosa e si muove verso il centro.
+        </p>
+
+        <div class="examples-grid">
+            <!-- Esempio: Da Destra -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Arriva da Destra</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente parte da 500px a destra e si muove verso il centro con movimento fluido.
+                </p>
+                <div class="viewer-container" id="viewer-1"></div>
+                <div class="status-indicator" id="status-1">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(1)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(1)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 500, y: 0 },
+  scale: 1.0,
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Da Sinistra -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Arriva da Sinistra</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente parte da 500px a sinistra e si muove verso il centro.
+                </p>
+                <div class="viewer-container" id="viewer-2"></div>
+                <div class="status-indicator" id="status-2">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(2)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(2)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: -500, y: 0 },
+  scale: 1.0,
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Dall'Alto -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Arriva dall'Alto</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente parte da 400px sopra e scende verso il centro.
+                </p>
+                <div class="viewer-container" id="viewer-3"></div>
+                <div class="status-indicator" id="status-3">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(3)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(3)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 0, y: -400 },
+  scale: 1.0,
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Diagonale -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Movimento Diagonale</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente si muove in diagonale da alto-destra verso il centro.
+                </p>
+                <div class="viewer-container" id="viewer-4"></div>
+                <div class="status-indicator" id="status-4">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(4)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(4)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 400, y: -300 },
+  scale: 1.0,
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEZIONE 2: SCALA E ROTAZIONE -->
+    <div class="section">
+        <h2 class="section-title">🔄 Scala e Rotazione</h2>
+        <p class="section-description">
+            Componenti con dimensioni o orientamenti diversi. La scala e rotazione rimangono costanti durante l'animazione.
+        </p>
+
+        <div class="examples-grid">
+            <!-- Esempio: Piccolo -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Componente Piccolo (50%)</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente appare sempre al 50% della dimensione originale.
+                </p>
+                <div class="viewer-container" id="viewer-5"></div>
+                <div class="status-indicator" id="status-5">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(5)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(5)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 300, y: 0 },
+  scale: 0.5,  // 50% dimensione
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Grande -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Componente Grande (150%)</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente appare sempre al 150% della dimensione originale.
+                </p>
+                <div class="viewer-container" id="viewer-6"></div>
+                <div class="status-indicator" id="status-6">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(6)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(6)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: -300, y: 0 },
+  scale: 1.5,  // 150% dimensione
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Ruotato -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Ruotato 45°</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente rimane ruotato di 45° durante tutta l'animazione.
+                </p>
+                <div class="viewer-container" id="viewer-7"></div>
+                <div class="status-indicator" id="status-7">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(7)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(7)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 0, y: -300 },
+  scale: 1.0,
+  rotation: 45,  // Ruotato 45°
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Combinazione -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Piccolo + Ruotato</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Combina scala ridotta (70%) e rotazione (-30°).
+                </p>
+                <div class="viewer-container" id="viewer-8"></div>
+                <div class="status-indicator" id="status-8">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(8)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(8)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 400, y: 300 },
+  scale: 0.7,      // 70% dimensione
+  rotation: -30,   // -30° rotazione
+  opacity: 1
+}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEZIONE 3: OPACITÀ -->
+    <div class="section">
+        <h2 class="section-title">👁 Opacità e Trasparenza</h2>
+        <p class="section-description">
+            Controllo della trasparenza dei componenti. Utile per elementi di sfondo o effetti sovrapposti.
+        </p>
+
+        <div class="examples-grid">
+            <!-- Esempio: Semi-trasparente -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Semi-Trasparente (50%)</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente mantiene un'opacità del 50% durante l'animazione.
+                </p>
+                <div class="viewer-container" id="viewer-9"></div>
+                <div class="status-indicator" id="status-9">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(9)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(9)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: 0, y: 300 },
+  scale: 1.0,
+  rotation: 0,
+  opacity: 0.5  // 50% opacità
+}</pre>
+                </div>
+            </div>
+
+            <!-- Esempio: Molto trasparente -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Molto Trasparente (20%)</h3>
+                    <span class="example-badge">Attuale</span>
+                </div>
+                <p class="example-description">
+                    Il componente è quasi invisibile con opacità del 20%.
+                </p>
+                <div class="viewer-container" id="viewer-10"></div>
+                <div class="status-indicator" id="status-10">Pronto</div>
+                <div class="controls">
+                    <button class="btn btn-play" onclick="playExample(10)">▶ Play</button>
+                    <button class="btn btn-reset" onclick="resetExample(10)">↺ Reset</button>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  explodeDirection: { x: -300, y: 0 },
+  scale: 1.0,
+  rotation: 0,
+  opacity: 0.2  // 20% opacità
+}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEZIONE 4: EFFETTI FUTURI -->
+    <div class="section">
+        <h2 class="section-title">🔮 Effetti Futuri (Da Implementare)</h2>
+        <p class="section-description">
+            Questi effetti richiedono modifiche al codice e non sono ancora disponibili. Sono mostrati come concetto.
+        </p>
+
+        <div class="examples-grid">
+            <!-- Esempio: Fade-In -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Fade-In (Fermo)</h3>
+                    <span class="example-badge future">Futuro</span>
+                </div>
+                <p class="example-description">
+                    Il componente appare gradualmente rimanendo fermo (opacity 0 → 1).
+                </p>
+                <div class="viewer-container" id="viewer-future-1">
+                    <p style="color: rgba(255,255,255,0.5); text-align: center;">
+                        ⚠️ Non implementato<br>Richiede modifiche al codice
+                    </p>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  animationType: 'fade',        // ⚠️ DA IMPLEMENTARE
+  explodeDirection: { x: 0, y: 0 },
+  fadeFrom: 0,                  // ⚠️ DA IMPLEMENTARE
+  fadeTo: 1,                    // ⚠️ DA IMPLEMENTARE
+  scale: 1.0,
+  rotation: 0
+}</pre>
+                </div>
+                <div class="future-note">
+                    <strong>Per implementare:</strong> Aggiungere supporto per animationType e interpolazione opacity in png-animation.js
+                </div>
+            </div>
+
+            <!-- Esempio: Scale-In -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Scale-In (Ingrandimento)</h3>
+                    <span class="example-badge future">Futuro</span>
+                </div>
+                <p class="example-description">
+                    Il componente "cresce" dal nulla rimanendo al centro (scale 0 → 1).
+                </p>
+                <div class="viewer-container" id="viewer-future-2">
+                    <p style="color: rgba(255,255,255,0.5); text-align: center;">
+                        ⚠️ Non implementato<br>Richiede modifiche al codice
+                    </p>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  animationType: 'scale',       // ⚠️ DA IMPLEMENTARE
+  explodeDirection: { x: 0, y: 0 },
+  scaleFrom: 0,                 // ⚠️ DA IMPLEMENTARE
+  scaleTo: 1.0,                 // ⚠️ DA IMPLEMENTARE
+  rotation: 0,
+  opacity: 1
+}</pre>
+                </div>
+                <div class="future-note">
+                    <strong>Per implementare:</strong> Aggiungere interpolazione scale in animateComponent()
+                </div>
+            </div>
+
+            <!-- Esempio: Rotate-In -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Rotate-In (Rotazione Animata)</h3>
+                    <span class="example-badge future">Futuro</span>
+                </div>
+                <p class="example-description">
+                    Il componente ruota durante l'animazione (rotation -180° → 0°).
+                </p>
+                <div class="viewer-container" id="viewer-future-3">
+                    <p style="color: rgba(255,255,255,0.5); text-align: center;">
+                        ⚠️ Non implementato<br>Richiede modifiche al codice
+                    </p>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  animationType: 'rotate',      // ⚠️ DA IMPLEMENTARE
+  explodeDirection: { x: 0, y: 0 },
+  rotateFrom: -180,             // ⚠️ DA IMPLEMENTARE
+  rotateTo: 0,                  // ⚠️ DA IMPLEMENTARE
+  scale: 1.0,
+  opacity: 1
+}</pre>
+                </div>
+                <div class="future-note">
+                    <strong>Per implementare:</strong> Aggiungere interpolazione rotation in animateComponent()
+                </div>
+            </div>
+
+            <!-- Esempio: Movimento + Fade -->
+            <div class="example-card">
+                <div class="example-header">
+                    <h3 class="example-title">Movimento + Fade-In</h3>
+                    <span class="example-badge future">Futuro</span>
+                </div>
+                <p class="example-description">
+                    Il componente si muove E appare gradualmente contemporaneamente.
+                </p>
+                <div class="viewer-container" id="viewer-future-4">
+                    <p style="color: rgba(255,255,255,0.5); text-align: center;">
+                        ⚠️ Non implementato<br>Richiede modifiche al codice
+                    </p>
+                </div>
+                <div class="code-block">
+                    <pre>{
+  animationType: 'move-fade',   // ⚠️ DA IMPLEMENTARE
+  explodeDirection: { x: 400, y: -300 },
+  fadeFrom: 0,                  // ⚠️ DA IMPLEMENTARE
+  fadeTo: 1,                    // ⚠️ DA IMPLEMENTARE
+  scale: 1.0,
+  rotation: 0
+}</pre>
+                </div>
+                <div class="future-note">
+                    <strong>Per implementare:</strong> Combinare movimento + interpolazione opacity
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🎬 Mia Animazione - Sistema di Animazione 2D PNG</p>
+        <p>Demo Interattiva - Versione 1.0</p>
+    </div>
+
+    <script type="module">
+        import { PNGAnimationController } from './js/png-animation.js';
+
+        // Configurazioni per ogni esempio
+        const examples = {
+            1: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Da Destra',
+                        explodeDirection: { x: 500, y: 0 },
+                        scale: 1.0,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            2: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Da Sinistra',
+                        explodeDirection: { x: -500, y: 0 },
+                        scale: 1.0,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            3: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Dall\'Alto',
+                        explodeDirection: { x: 0, y: -400 },
+                        scale: 1.0,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            4: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Diagonale',
+                        explodeDirection: { x: 400, y: -300 },
+                        scale: 1.0,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            5: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Piccolo',
+                        explodeDirection: { x: 300, y: 0 },
+                        scale: 0.5,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            6: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Grande',
+                        explodeDirection: { x: -300, y: 0 },
+                        scale: 1.5,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '200px', maxHeight: '200px' }
+                }
+            },
+            7: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Ruotato',
+                        explodeDirection: { x: 0, y: -300 },
+                        scale: 1.0,
+                        rotation: 45,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            8: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Piccolo e Ruotato',
+                        explodeDirection: { x: 400, y: 300 },
+                        scale: 0.7,
+                        rotation: -30,
+                        zIndex: 1,
+                        opacity: 1
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            9: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Semi-Trasparente',
+                        explodeDirection: { x: 0, y: 300 },
+                        scale: 1.0,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 0.5
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            },
+            10: {
+                config: {
+                    imagePath: 'images/',
+                    animation: { duration: 1000, delay: 0, easing: 'easeInOutCubic' },
+                    components: [{
+                        filename: '1.png',
+                        name: 'Molto Trasparente',
+                        explodeDirection: { x: -300, y: 0 },
+                        scale: 1.0,
+                        rotation: 0,
+                        zIndex: 1,
+                        opacity: 0.2
+                    }],
+                    display: { maxWidth: '150px', maxHeight: '150px' }
+                }
+            }
+        };
+
+        // Store controllers
+        const controllers = {};
+
+        // Inizializza tutti gli esempi
+        Object.keys(examples).forEach(id => {
+            const container = document.getElementById(`viewer-${id}`);
+            const controller = new PNGAnimationController(examples[id].config);
+            controller.init(container);
+            controller.setExplodedView();
+            controllers[id] = controller;
+        });
+
+        // Funzioni globali per i pulsanti
+        window.playExample = async function(id) {
+            const controller = controllers[id];
+            const statusEl = document.getElementById(`status-${id}`);
+
+            statusEl.textContent = 'Animazione in corso...';
+            statusEl.classList.add('playing');
+
+            await controller.playAnimation(
+                () => {
+                    statusEl.textContent = 'Completato ✓';
+                    statusEl.classList.remove('playing');
+                }
+            );
+        };
+
+        window.resetExample = function(id) {
+            const controller = controllers[id];
+            const statusEl = document.getElementById(`status-${id}`);
+
+            controller.stopAnimation();
+            controller.setExplodedView();
+            statusEl.textContent = 'Pronto';
+            statusEl.classList.remove('playing');
+        };
+    </script>
+</body>
+</html>
